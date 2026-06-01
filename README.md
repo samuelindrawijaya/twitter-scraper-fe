@@ -51,20 +51,18 @@ npm run lint
 
 ## Environment
 
-The frontend calls the backend through `VITE_API_BASE_URL`. If this value is omitted, requests are made relative to the current origin.
+In production on Vercel, the frontend calls same-origin `/api/...` routes. A Vercel serverless proxy forwards those requests to the backend and attaches the API key server-side.
 
-If the backend requires an API key, set `VITE_API_KEY`. The frontend sends this value as the `X-API-Key` request header.
-
-Create a local `.env` file when the backend runs on a separate host or port:
+Create a local `.env` file for the proxy:
 
 ```env
-VITE_API_BASE_URL=https://implicit-maryl-greenify-2a8c3f29.koyeb.app
-VITE_API_KEY=test-api-key
+BACKEND_API_BASE_URL=https://implicit-maryl-greenify-2a8c3f29.koyeb.app
+BACKEND_API_KEY=test-api-key
 ```
 
 For Vercel, add the same values in the project settings under **Environment Variables**, then redeploy.
 
-Note: Vite environment variables are bundled into the browser when they use the `VITE_` prefix, so `VITE_API_KEY` should not be treated as a private secret. Use it as a simple client access key, or proxy requests through a server you control if the key must stay private.
+Do not set `VITE_API_BASE_URL` on Vercel unless you intentionally want the browser to call the backend directly. Leaving it empty makes the app use the Vercel proxy and avoids browser CORS preflight failures.
 
 ## Expected Backend Routes
 

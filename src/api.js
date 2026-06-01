@@ -1,11 +1,9 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
-const API_KEY = import.meta.env.VITE_API_KEY || ''
 
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',
-      ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
       ...(options.headers || {}),
     },
     ...options,
@@ -23,11 +21,7 @@ async function request(path, options = {}) {
 }
 
 async function download(path, filename) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
-    },
-  })
+  const res = await fetch(`${API_BASE}${path}`)
 
   if (!res.ok) {
     const message = await res.text()
