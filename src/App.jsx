@@ -18,6 +18,7 @@ import { api } from './api.js'
 
 const today = new Date().toISOString().slice(0, 10)
 const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+const JOB_POLL_INTERVAL_MS = 1000
 
 const emptyForm = {
   start_date: lastWeek,
@@ -392,7 +393,7 @@ function JobTracker({ jobId, initialJob }) {
         setError(null)
 
         if (!['completed', 'failed'].includes(res.status)) {
-          timer = setTimeout(poll, 2500)
+          timer = setTimeout(poll, JOB_POLL_INTERVAL_MS)
         }
       } catch (err) {
         if (cancelled) return
@@ -403,7 +404,7 @@ function JobTracker({ jobId, initialJob }) {
           setError(err.message)
         }
 
-        timer = setTimeout(poll, 2500)
+        timer = setTimeout(poll, JOB_POLL_INTERVAL_MS)
       }
     }
 
