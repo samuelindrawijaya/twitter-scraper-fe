@@ -379,17 +379,34 @@ function JobTracker({ jobId }) {
     setJob(null)
     setError(null)
     let cancelled = false
+    let hasResult = false
+    let timer
+
     async function poll() {
       try {
         const res = await api.getJob(jobId)
-        if (!cancelled) setJob(res)
+        if (cancelled) return
+
+        hasResult = true
+        setJob(res)
+        setError(null)
+
+        if (!['completed', 'failed'].includes(res.status)) {
+          timer = setTimeout(poll, 2500)
+        }
       } catch (err) {
-        if (!cancelled) setError(err.message)
+        if (cancelled) return
+
+        if (!hasResult) {
+          setError(err.message)
+        }
+
+        timer = setTimeout(poll, 2500)
       }
     }
+
     poll()
-    const timer = setInterval(poll, 2500)
-    return () => { cancelled = true; clearInterval(timer) }
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [jobId])
 
   async function downloadCsv() {
