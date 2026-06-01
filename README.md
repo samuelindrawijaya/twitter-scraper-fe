@@ -53,11 +53,18 @@ npm run lint
 
 The frontend calls the backend through `VITE_API_BASE_URL`. If this value is omitted, requests are made relative to the current origin.
 
+If the backend requires an API key, set `VITE_API_KEY`. The frontend sends this value as the `X-API-Key` request header.
+
 Create a local `.env` file when the backend runs on a separate host or port:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=https://implicit-maryl-greenify-2a8c3f29.koyeb.app
+VITE_API_KEY=test-api-key
 ```
+
+For Vercel, add the same values in the project settings under **Environment Variables**, then redeploy.
+
+Note: Vite environment variables are bundled into the browser when they use the `VITE_` prefix, so `VITE_API_KEY` should not be treated as a private secret. Use it as a simple client access key, or proxy requests through a server you control if the key must stay private.
 
 ## Expected Backend Routes
 

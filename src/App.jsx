@@ -372,6 +372,7 @@ function QueryPreview({ queries }) {
 function JobTracker({ jobId }) {
   const [job, setJob] = useState(null)
   const [error, setError] = useState(null)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (!jobId) return
@@ -390,6 +391,18 @@ function JobTracker({ jobId }) {
     const timer = setInterval(poll, 2500)
     return () => { cancelled = true; clearInterval(timer) }
   }, [jobId])
+
+  async function downloadCsv() {
+    setDownloading(true)
+    setError(null)
+    try {
+      await api.downloadJob(jobId)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <section className="card motion-enter delay-1">
@@ -422,7 +435,12 @@ function JobTracker({ jobId }) {
             <Metric label="Total rows" value={job.progress.total_rows} />
           </div>
           {job.error && <Alert type="error">{job.error}</Alert>}
-          {job.status === 'completed' && <a className="btn-primary" href={api.downloadUrl(job.job_id)}><Download className="h-4 w-4" /> Download CSV</a>}
+          {job.status === 'completed' && (
+            <button className="btn-primary" onClick={downloadCsv} disabled={downloading}>
+              {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Download CSV
+            </button>
+          )}
         </div>
       )}
     </section>

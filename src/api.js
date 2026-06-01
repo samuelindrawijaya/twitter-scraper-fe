@@ -1,9 +1,11 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+const API_KEY = import.meta.env.VITE_API_KEY || ''
 
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
       ...(options.headers || {}),
     },
     ...options,
@@ -18,6 +20,29 @@ async function request(path, options = {}) {
   }
 
   return data
+}
+
+async function download(path, filename) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      ...(API_KEY ? { 'X-API-Key': API_KEY } : {}),
+    },
+  })
+
+  if (!res.ok) {
+    const message = await res.text()
+    throw new Error(message || `Download failed: ${res.status}`)
+  }
+
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
 }
 
 export const api = {
@@ -46,4 +71,5 @@ export const api = {
   }),
   getJob: (jobId) => request(`/api/scrape/jobs/${jobId}`),
   downloadUrl: (jobId) => `${API_BASE}/api/scrape/jobs/${jobId}/download`,
+  downloadJob: (jobId) => download(`/api/scrape/jobs/${jobId}/download`, `${jobId}.csv`),
 }
