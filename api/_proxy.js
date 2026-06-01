@@ -54,10 +54,11 @@ export async function proxy(req, res, path) {
   })
 
   res.statusCode = response.status
+  res.setHeader('Cache-Control', 'no-store')
 
   response.headers.forEach((value, key) => {
     const lowerKey = key.toLowerCase()
-    if (!['content-encoding', 'content-length', 'transfer-encoding'].includes(lowerKey)) {
+    if (!['cache-control', 'content-encoding', 'content-length', 'transfer-encoding'].includes(lowerKey)) {
       res.setHeader(key, value)
     }
   })

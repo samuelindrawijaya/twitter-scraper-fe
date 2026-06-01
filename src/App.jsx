@@ -288,7 +288,7 @@ function ScrapePanel({ onJobStarted }) {
     try {
       const res = await api.startScrape(payload)
       setMessage({ type: 'success', text: `Started job ${res.job_id}` })
-      onJobStarted(res.job_id)
+      onJobStarted(res)
     } catch (err) {
       setMessage({ type: 'error', text: err.message })
     } finally {
@@ -369,17 +369,17 @@ function QueryPreview({ queries }) {
   )
 }
 
-function JobTracker({ jobId }) {
-  const [job, setJob] = useState(null)
+function JobTracker({ jobId, initialJob }) {
+  const [job, setJob] = useState(initialJob)
   const [error, setError] = useState(null)
   const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (!jobId) return
-    setJob(null)
+    setJob(initialJob)
     setError(null)
     let cancelled = false
-    let hasResult = false
+    let hasResult = !!initialJob
     let timer
 
     async function poll() {
@@ -397,7 +397,9 @@ function JobTracker({ jobId }) {
       } catch (err) {
         if (cancelled) return
 
-        if (!hasResult) {
+        const isTransientMissingJob = err.message.toLowerCase().includes('job not found')
+
+        if (!hasResult && !isTransientMissingJob) {
           setError(err.message)
         }
 
@@ -407,7 +409,7 @@ function JobTracker({ jobId }) {
 
     poll()
     return () => { cancelled = true; clearTimeout(timer) }
-  }, [jobId])
+  }, [jobId, initialJob])
 
   async function downloadCsv() {
     setDownloading(true)
@@ -439,7 +441,7 @@ function JobTracker({ jobId }) {
           </div>
         </div>
       )}
-      {error && <Alert type="error">{error}</Alert>}
+      {error && !job && <Alert type="error">{error}</Alert>}
       {job && (
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -471,6 +473,7 @@ function Metric({ label, value }) {
 export default function App() {
   const [backendOk, setBackendOk] = useState(false)
   const [jobId, setJobId] = useState('')
+  const [startedJob, setStartedJob] = useState(null)
 
   useEffect(() => {
     api.health().then(() => setBackendOk(true)).catch(() => setBackendOk(false))
@@ -483,9 +486,21 @@ export default function App() {
       <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <div className="space-y-6">
           <AuthPanel />
-          <JobTracker jobId={jobId} />
+          <JobTracker jobId={jobId} initialJob={startedJob} />
         </div>
-        <ScrapePanel onJobStarted={setJobId} />
+        <ScrapePanel onJobStarted={(job) => {
+          setStartedJob({
+            job_id: job.job_id,
+            status: job.status,
+            progress: {
+              current_category: null,
+              collected_rows: 0,
+              total_rows: 0,
+            },
+            error: null,
+          })
+          setJobId(job.job_id)
+        }} />
       </div>
     </Shell>
   )
