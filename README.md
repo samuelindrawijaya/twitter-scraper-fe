@@ -64,6 +64,8 @@ For Vercel, add the same values in the project settings under **Environment Vari
 
 Do not set `VITE_API_BASE_URL` on Vercel unless you intentionally want the browser to call the backend directly. Leaving it empty makes the app use the Vercel proxy and avoids browser CORS preflight failures.
 
+`BACKEND_API_BASE_URL` must be the Koyeb backend URL, not the Vercel frontend URL. If it points to the Vercel app, `/api/...` requests will loop back into the same deployment.
+
 ## Expected Backend Routes
 
 The UI expects these API routes to be available:

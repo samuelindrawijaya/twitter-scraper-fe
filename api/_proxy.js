@@ -24,6 +24,15 @@ export async function proxy(req, res, path) {
   }
 
   const incomingUrl = new URL(req.url, `https://${req.headers.host || 'localhost'}`)
+  const backendUrl = new URL(BACKEND_API_BASE_URL)
+
+  if (backendUrl.host === incomingUrl.host) {
+    sendJson(res, 500, {
+      detail: 'BACKEND_API_BASE_URL points to this Vercel app. Set it to the Koyeb backend URL instead.',
+    })
+    return
+  }
+
   const targetUrl = new URL(`${path}${incomingUrl.search}`, BACKEND_API_BASE_URL)
   const method = req.method || 'GET'
   const headers = {
